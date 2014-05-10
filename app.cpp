@@ -13,14 +13,11 @@ vec3 toVec3(const std::string& str)
     ss >> result.x;
     ss >> result.y;
     ss >> result.z;
-    std::cout << result.x << " " << result.y << " " << result.z << std::endl;
     return result;
 }
 
 void App::setValue(const std::string& param, const std::string& value)
 {
-    std::cout << param << "|" << value << std::endl;
-
     if (param == "roughness")
         roughness = std::stof(value);
     else if (param == "F0")
@@ -59,8 +56,6 @@ void App::setValue(const std::string& param, const std::string& value)
     assert(itG != Gnames.end());
     rightShaderIndex = std::distance(Dnames.begin(), itD)*numGs +
                        std::distance(Gnames.begin(), itG);
-
-    std::cout << leftShaderIndex << " " << rightShaderIndex << std::endl;
 }
 
 App::~App()
@@ -94,7 +89,6 @@ bool App::setup()
                 "assets/Fschlick.part",
                 "assets/mesh.fs"};
             meshShaders.push_back(renderer->addShader({"assets/mesh.vs"}, fsParts));
-            std::cout << (i*numGs + j) << " " << Dnames.at(i) << " " << Gnames.at(j) << std::endl;
         }
     }
     setValue("dummy", "dummy");
