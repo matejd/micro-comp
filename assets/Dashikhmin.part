@@ -1,0 +1,16 @@
+// Anisotropic version of Blinn-Phong
+float evaluateD(vec3 wh, vec3 wn, float roughness) {
+    vec3 worldUp = abs(wn.y) < 0.999 ? vec3(0.0,1.0,0.0) : vec3(1.0,0.0,0.0);
+    vec3 tangent = normalize(cross(worldUp, wn));
+    // Project wh down
+    vec3 whp = normalize(wh - dot(wh,wn)*wn);
+    float cosPhih = dot(tangent, whp);
+    float ch2 = cosPhih*cosPhih;
+    float sh2 = 1.0 - ch2;
+
+    const float TwoPI = 2.0 * 3.14159265;
+    float mx = 2.0 / (roughness * roughness) - 2.0;
+    float my = mx / 10.0;
+    mx *= 10.0;
+    return sqrt((mx+2.0)*(my+2.0)) * pow(max(dot(wh, wn), 0.0), mx*ch2 + my*sh2) / TwoPI;
+}

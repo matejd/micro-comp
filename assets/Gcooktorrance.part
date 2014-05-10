@@ -1,0 +1,8 @@
+float evaluateG(vec3 wi, vec3 wo, vec3 wh, vec3 wn, float roughness) {
+    float dhn = max(dot(wh, wn), 0.0);
+    float din = max(dot(wi, wn), 0.0);
+    float don = max(dot(wo, wn), 0.0);
+    float dih = max(dot(wi, wh), 0.0);
+
+    return min(min(2.0*dhn*don/dih, 2.0*dhn*din/dih), 1.0);
+}

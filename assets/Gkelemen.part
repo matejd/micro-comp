@@ -1,0 +1,9 @@
+// Kelemen-Kalos approximation of Cook-Torrance geometry term. In practice, the following should be folded
+// into the microfacet BRDF, greatly reducing the size of the final expression.
+float evaluateG(vec3 wi, vec3 wo, vec3 wh, vec3 wn, float roughness) {
+    float din = max(dot(wi, wn), 0.0);
+    float don = max(dot(wo, wn), 0.0);
+    float dio = max(dot(wi, wo), 0.0);
+
+    return 2.0 * din * don / (1.0 + dio);
+}

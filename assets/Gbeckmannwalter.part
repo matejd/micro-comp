@@ -1,0 +1,19 @@
+// Walter approximated shadowing term G1 for Beckmann D, since the exact result is somewhat expensive
+float evaluateG(vec3 wi, vec3 wo, vec3 wh, vec3 wn, float roughness) {
+    float din = max(dot(wi, wn), 0.0);
+    float don = max(dot(wo, wn), 0.0);
+
+    // tan(acos(x)) == sqrt(1-x*x) / x
+    float ai = din / (roughness * sqrt(1.0-din*din));
+    float ao = don / (roughness * sqrt(1.0-don*din));
+    float ai2 = ai*ai;
+    float ao2 = ao*ao;
+    float gi = 1.0;
+    float go = 1.0;
+    if (ai < 1.6)
+        gi = (3.535*ai + 2.181*ai2) / (1.0 + 2.276*ai + 2.577*ai2);
+    if (ao < 1.6)
+        go = (3.535*ao + 2.181*ao2) / (1.0 + 2.276*ao + 2.577*ao2);
+
+    return gi * go;
+}

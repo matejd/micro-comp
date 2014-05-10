@@ -1,0 +1,8 @@
+// Beckmann, very similar to Blinn-Phong D
+float evaluateD(vec3 wh, vec3 wn, float roughness) {
+    const float PI = 3.14159265;
+    float m2 = roughness*roughness;
+    float dhn = max(dot(wh, wn), 0.0);
+    float dhn2 = dhn*dhn;
+    return exp((dhn2-1.0)/(m2*dhn2)) / (PI * m2 * dhn2*dhn2);
+}

@@ -1,0 +1,5 @@
+float evaluateD(vec3 wh, vec3 wn, float roughness) {
+    const float TwoPI = 2.0 * 3.14159265;
+    float m = 2.0 / (roughness * roughness) - 2.0;
+    return (m+2.0) * pow(max(dot(wh, wn), 0.0), m) / TwoPI;
+}

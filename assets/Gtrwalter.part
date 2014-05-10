@@ -1,0 +1,14 @@
+// G1 for Trowbridge-Reitz D
+float evaluateG(vec3 wi, vec3 wo, vec3 wh, vec3 wn, float roughness) {
+    float dhn = max(dot(wh, wn), 0.0);
+    float din = max(dot(wi, wn), 0.0);
+    float don = max(dot(wo, wn), 0.0);
+    float dih = max(dot(wi, wh), 0.0);
+
+    float m2 = roughness*roughness;
+    float ti2 = (1.0-din) / (din * din);
+    float to2 = (1.0-don) / (don * don);
+    float gi = 2.0 / (1.0 + sqrt(1.0 + m2*ti2));
+    float go = 2.0 / (1.0 + sqrt(1.0 + m2*to2));
+    return gi*go;
+}

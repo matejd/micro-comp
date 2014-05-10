@@ -1,0 +1,3 @@
+float evaluateG(vec3 wi, vec3 wo, vec3 wh, vec3 wn, float roughness) {
+    return dot(wn, wi) * dot(wn, wo);
+}
