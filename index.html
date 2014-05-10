@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Emscripten-Generated Code</title>
+    <style>
+      .emscripten { padding-right: 0; margin-left: auto; margin-right: auto; display: block; }
+      textarea.emscripten { font-family: monospace; width: 80%; }
+      div.emscripten { text-align: center; }
+      /* the canvas *must not* have any border or padding, or mouse coords will be wrong */
+      canvas.emscripten { border: 0px none; }
+
+      div.description { width: 80%; text-align: left; }
+    </style>
+  </head>
+  <body>
+    <div class="emscripten" id="status">Downloading...</div>
+    <div class="emscripten">
+      <progress value="0" max="100" id="progress" hidden=1></progress>  
+    </div>
+
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+
+    <div class="emscripten description">
+        <h1>Comparison of Microfacet D and G terms</h1>
+        <p>Point illumination only! Equations for various terms can be found in many places, e.g. [1].
+        </p>
+        <p>Differences are subtle, but here are some things you might notice:
+        <ul>
+            <li>Beckmann D is almost indistinguishable from Blinn-Phong.</li>
+            <li>Trowbridge-Reitz D has "softer" highlights (longer tails) than Blinn-Phong.</li>
+            <li>Geometric shadowing term G mostly affects glancing angles (rotate the camera to face the light source).</li>
+            <li>Implicit G is "darker" than others.</li>
+        </ul>
+        </p>
+
+        <p>
+        [1] Specular BRDF Reference, Brian Karis, <a href="http://graphicrants.blogspot.com/2013/08/specular-brdf-reference.html">link</a>
+        <br />
+        Walt Disney head model by <a href="http://blog.davidoreilly.com/post/18087489343/disneyhead">David OReilly</a>. Any errors?
+        </p>
+    </div>
+
+
+    <textarea class="emscripten" id="output" rows="8"></textarea>
+    <script type='text/javascript'>
+      // connect to canvas
+      var Module = {
+        preRun: [],
+        postRun: [],
+        print: (function() {
+          var element = document.getElementById('output');
+          element.value = ''; // clear browser cache
+          return function(text) {
+            text = Array.prototype.slice.call(arguments).join(' ');
+            // These replacements are necessary if you render to raw HTML
+            //text = text.replace(/&/g, "&amp;");
+            //text = text.replace(/</g, "&lt;");
+            //text = text.replace(/>/g, "&gt;");
+            //text = text.replace('\n', '<br>', 'g');
+            element.value += text + "\n";
+            element.scrollTop = element.scrollHeight; // focus on bottom
+          };
+        })(),
+        printErr: function(text) {
+          text = Array.prototype.slice.call(arguments).join(' ');
+          if (0) { // XXX disabled for safety typeof dump == 'function') {
+            dump(text + '\n'); // fast, straight to the real console
+          } else {
+            console.log(text);
+          }
+        },
+        canvas: document.getElementById('canvas'),
+        setStatus: function(text) {
+          if (!Module.setStatus.last) Module.setStatus.last = { time: Date.now(), text: '' };
+          if (text === Module.setStatus.text) return;
+          var m = text.match(/([^(]+)\((\d+(\.\d+)?)\/(\d+)\)/);
+          var now = Date.now();
+          if (m && now - Date.now() < 30) return; // if this is a progress update, skip it if too soon
+          var statusElement = document.getElementById('status');
+          var progressElement = document.getElementById('progress');
+          if (m) {
+            text = m[1];
+            progressElement.value = parseInt(m[2])*100;
+            progressElement.max = parseInt(m[4])*100;
+            progressElement.hidden = false;
+          } else {
+            progressElement.value = null;
+            progressElement.max = null;
+            progressElement.hidden = true;
+          }
+          statusElement.innerHTML = text;
+        },
+        totalDependencies: 0,
+        monitorRunDependencies: function(left) {
+          this.totalDependencies = Math.max(this.totalDependencies, left);
+          Module.setStatus(left ? 'Preparing... (' + (this.totalDependencies-left) + '/' + this.totalDependencies + ')' : 'All downloads complete.');
+        }
+      };
+      Module.setStatus('Downloading...');
+    </script>
+    <script async type="text/javascript" src="index_plain.js"></script>
+
+    <script type="text/javascript" src="dat.gui.min.js"></script>
+    <script type="text/javascript">
+    var GUI = function() {
+        this.roughness = 0.5;
+        this.F0 = [10, 10, 10];
+        this.kd = [50, 0, 0];
+        this.diff = false;
+        this.gamma = 2.2;
+        this.mesh = 'Walt';
+    };
+
+    var GUIview = function() {
+        this.D = 'Blinn';
+        this.G = 'Implicit';
+    };
+
+    Module.postRun.push(function() {
+        var setAppValue = Module.cwrap('setAppValue', 'void', ['string', 'string']);
+        var gui = new GUI();
+        var guiL = new GUIview();
+        var guiR = new GUIview();
+        var dg = new dat.GUI();
+        var Ds = ['Beckmann', 'Blinn', 'Ashikhmin-Shirley', 'Trowbridge-Reitz'];
+        var Gs = ['Implicit', 'Cook-Torrance', 'Beckmann-Walter', 'Trowbridge-Reitz-Walter', 'Kelemen-Kalos'];
+        var meshes = ['Walt', 'Sphere'];
+
+        var rgbToStr = function(c) {
+            return (c[0]/255.) + ' ' + (c[1]/255.) + ' ' + (c[2]/255.);
+        };
+        var f1 = dg.addFolder('Common');
+        var cont;
+        cont = f1.add(gui, 'roughness', 0., 1.); cont.onChange(function(value) {setAppValue('roughness', value);});
+        cont = f1.addColor(gui, 'F0');           cont.onChange(function(value) {setAppValue('F0', rgbToStr(value));});
+        cont = f1.addColor(gui, 'kd');           cont.onChange(function(value) {setAppValue('kd', rgbToStr(value));});
+        cont = f1.add(gui, 'mesh', meshes);      cont.onChange(function(value) {setAppValue('mesh', value);});
+        cont = f1.add(gui, 'diff');              cont.onChange(function(value) {setAppValue('diff', value);});
+        cont = f1.add(gui, 'gamma', 1., 2.5);    cont.onChange(function(value) {setAppValue('gamma', value);});
+
+        var f2 = dg.addFolder('Left');
+        cont = f2.add(guiL, 'D', Ds); cont.onChange(function(value) {setAppValue('leftD', value);});
+        cont = f2.add(guiL, 'G', Gs); cont.onChange(function(value) {setAppValue('leftG', value);});
+
+        var f3 = dg.addFolder('Right');
+        cont = f3.add(guiR, 'D', Ds); cont.onChange(function(value) {setAppValue('rightD', value);});
+        cont = f3.add(guiR, 'G', Gs); cont.onChange(function(value) {setAppValue('rightG', value);});
+    });
+    </script>
+
+  </body>
+</html>
